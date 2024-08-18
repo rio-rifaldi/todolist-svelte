@@ -1,23 +1,24 @@
 <script lang="ts">
 	import TodoListItem from '$lib/components/TodoListItem.svelte';
-	import type { CustomeKeyboardEvent, CustomeMouseEvent, TodosType } from '$lib/types';
+	import type { CustomeKeyboardEvent, TodosType } from '$lib/types';
 	import { writable } from 'svelte/store';
 
 	const todos = writable<TodosType[]>([]);
-	const handleAddWithKey = (e: CustomeKeyboardEvent) => {
+	function handleAddWithKey(this: HTMLInputElement, e: CustomeKeyboardEvent) {
 		if (e.key !== 'Enter') return;
-		if (e.currentTarget.value === '') return;
+		if (this.value === '') return;
+		console.log(this.value);
 
 		let todoInput: TodosType = {
 			id: Math.random(),
 			isChecked: false,
-			todo: e.currentTarget.value
+			todo: this.value
 		};
 		todos.update(($todos) => [...$todos, todoInput]);
-		e.currentTarget.value = '';
-	};
-	const handleAddWithButton = (e: CustomeMouseEvent) => {
-		let inputValue = (e.currentTarget.previousElementSibling as HTMLInputElement).value;
+		this.value = '';
+	}
+	function handleAddWithButton(this: HTMLButtonElement) {
+		let inputValue = (this.previousElementSibling as HTMLInputElement).value;
 		if (inputValue === '') {
 			return;
 		}
@@ -27,8 +28,8 @@
 			todo: inputValue
 		};
 		todos.update(($todos) => [...$todos, todoInput]);
-		(e.currentTarget.previousElementSibling as HTMLInputElement).value = '';
-	};
+		(this.previousElementSibling as HTMLInputElement).value = '';
+	}
 </script>
 
 <div class="w-full max-w-lg place-self-center" id="todolist">

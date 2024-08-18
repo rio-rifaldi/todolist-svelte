@@ -1,14 +1,14 @@
 <script lang="ts">
 	import type { CustomeKeyboardEvent, CustomeMouseEvent, TodosType } from '$lib/types';
-	import { IconTrash, IconEdit, IconCheck, IconDeviceFloppy } from '@tabler/icons-svelte';
-	import { onMount, tick } from 'svelte';
+	import { IconDeviceFloppy, IconEdit, IconTrash } from '@tabler/icons-svelte';
+	import { tick } from 'svelte';
 	import { writable, type Writable } from 'svelte/store';
 
 	export let currentTodo: TodosType;
 	export let store: Writable<TodosType[]>;
 
 	let isEdit = writable(false);
-
+	let input: HTMLInputElement;
 	const handleDelete = (e: CustomeMouseEvent) => {
 		store.update(($todos) => $todos.filter((item) => item.id !== currentTodo.id));
 	};
@@ -64,8 +64,6 @@
 			isEdit.set(false);
 		}
 	});
-
-	let input: HTMLInputElement;
 </script>
 
 <div class="py-3 px-4 rounded-md w-full shadow flex justify-between">
