@@ -1,69 +1,17 @@
 <script lang="ts">
-	import type { CustomeKeyboardEvent, CustomeMouseEvent, TodosType } from '$lib/types';
+	import { closeUpdateOnOutsideClick } from '$lib/functions';
+	import { todosStore } from '$lib/store/todo';
+	import type { TodosType } from '$lib/types';
 	import { IconDeviceFloppy, IconEdit, IconTrash } from '@tabler/icons-svelte';
 	import { tick } from 'svelte';
-	import { writable, type Writable } from 'svelte/store';
+	import { writable } from 'svelte/store';
 
 	export let currentTodo: TodosType;
-	export let store: Writable<TodosType[]>;
 
 	let isEdit = writable(false);
 	let input: HTMLInputElement;
-	const handleDelete = (e: CustomeMouseEvent) => {
-		store.update(($todos) => $todos.filter((item) => item.id !== currentTodo.id));
-	};
-	const handleCheck = (
-		e: Event & {
-			currentTarget: EventTarget & HTMLInputElement;
-		}
-	) => {
-		store.update(($todos) => {
-			const currentIndex = $todos.findIndex((item) => item.id === currentTodo.id);
-			const { id, isChecked, todo } = currentTodo;
-
-			const newTodo = { id, todo, isChecked: !isChecked };
-			$todos.splice(currentIndex, 1, newTodo);
-			return $todos;
-		});
-	};
-
-	function handleEdit(e: CustomeKeyboardEvent) {
-		if (e.key !== 'Enter') return;
-		if (e.currentTarget.value === '') return;
-
-		store.update(($todos) => {
-			const currentIndex = $todos.findIndex((item) => item.id === currentTodo.id);
-			const { id, isChecked, todo } = currentTodo;
-
-			const newTodo = { id, isChecked, todo: e.currentTarget.value };
-			$todos.splice(currentIndex, 1, newTodo);
-			return $todos;
-		});
-		isEdit.set(false);
-	}
-
-	const handleUpdateWithButton = (e: CustomeMouseEvent) => {
-		let inputValue = input.value;
-		if (inputValue === '') return;
-
-		store.update(($todos) => {
-			const currentIndex = $todos.findIndex((item) => item.id === currentTodo.id);
-			const { id, isChecked, todo } = currentTodo;
-
-			const newTodo = { id, isChecked, todo: inputValue };
-			$todos.splice(currentIndex, 1, newTodo);
-			return $todos;
-		});
-		isEdit.set(false);
-	};
-
-	window.addEventListener('click', (e) => {
-		if (document.getElementById('todolist')?.contains(e.target as Node)) {
-			return;
-		} else {
-			isEdit.set(false);
-		}
-	});
+	const { checkTodo, editTodoWithButton, deleteTodo, editTodoWithKey } = todosStore;
+	closeUpdateOnOutsideClick(isEdit);
 </script>
 
 <div class="py-3 px-4 rounded-md w-full shadow flex justify-between">
@@ -73,7 +21,7 @@
 			name="check"
 			id="check"
 			class="size-5 flex-shrink-0"
-			on:change={handleCheck}
+			on:change={() => checkTodo(currentTodo)}
 			checked={currentTodo.isChecked}
 		/>
 
@@ -85,7 +33,7 @@
 				value={currentTodo.todo}
 				class="focus:outline-none focus:border-b-blue-700 border-b-blue-500 border-b-2 w-full"
 				bind:this={input}
-				on:keypress={handleEdit}
+				on:keypress={(e) => editTodoWithKey(e, currentTodo, isEdit)}
 			/>
 		{:else}
 			<p class={currentTodo.isChecked ? 'line-through text-slate-300' : ''}>
@@ -98,7 +46,7 @@
 		{#if $isEdit}
 			<button
 				class="hover:bg-slate-200 rounded duration-200 disabled:opacity-20 disabled:pointer-events-none"
-				on:click|stopPropagation={handleUpdateWithButton}
+				on:click|stopPropagation={(e) => editTodoWithButton(input, e, isEdit, currentTodo)}
 			>
 				<IconDeviceFloppy class="hover:stroke-green-500" />
 			</button>
@@ -115,7 +63,7 @@
 			</button>
 		{/if}
 
-		<button on:click={handleDelete}>
+		<button on:click={(e) => deleteTodo(currentTodo)}>
 			<IconTrash class="stroke-red-500 duration-200 hover:stroke-red-700" />
 		</button>
 	</div>

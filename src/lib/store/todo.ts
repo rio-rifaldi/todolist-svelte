@@ -1,7 +1,7 @@
 import type { CustomeKeyboardEvent, CustomeMouseEvent, TodosType } from '$lib/types';
 import { writable, type Writable } from 'svelte/store';
 
-export default function TodoStore() {
+function TodoStore() {
 	const todos = writable<TodosType[]>([]);
 
 	function createTodoWithKey(this: HTMLInputElement, e: CustomeKeyboardEvent) {
@@ -23,7 +23,7 @@ export default function TodoStore() {
 		const inputTodo: TodosType = {
 			id: Math.random(),
 			isChecked: false,
-			todo: this.value
+			todo: inputValue
 		};
 		todos.update(($todos) => [...$todos, inputTodo]);
 		(this.previousElementSibling as HTMLInputElement).value = '';
@@ -43,14 +43,14 @@ export default function TodoStore() {
 	}
 
 	function editTodoWithKey(
-		this: HTMLInputElement,
 		e: CustomeKeyboardEvent,
-		isEdit: Writable<boolean>,
-		currentTodo: TodosType
+		currentTodo: TodosType,
+		isEdit: Writable<boolean>
 	) {
 		if (e.key !== 'Enter') return;
-		if (this.value === '') return;
+		if (e.currentTarget.value === '') return;
 
+		console.log(e.currentTarget);
 		todos.update(($todos) => {
 			const currentIndex = $todos.findIndex((item) => item.id === currentTodo.id);
 			const { id, isChecked, todo } = currentTodo;
@@ -67,14 +67,16 @@ export default function TodoStore() {
 		isEdit: Writable<boolean>,
 		currentTodo: TodosType
 	) {
+		console.log(inputRef.value);
 		if (inputRef.value === '') return;
 
 		todos.update(($todos) => {
 			const currentIndex = $todos.findIndex((item) => item.id === currentTodo.id);
 			const { id, isChecked, todo } = currentTodo;
 
-			const newTodo = { id, isChecked, todo: e.currentTarget.value };
+			const newTodo = { id, isChecked, todo: inputRef.value };
 			$todos.splice(currentIndex, 1, newTodo);
+			console.log($todos);
 			return $todos;
 		});
 		isEdit.set(false);
@@ -90,3 +92,5 @@ export default function TodoStore() {
 		editTodoWithButton
 	};
 }
+
+export const todosStore = TodoStore();
