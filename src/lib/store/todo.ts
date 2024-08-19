@@ -1,8 +1,12 @@
+import { browser } from '$app/environment';
+import { LocalStorage } from '$lib/functions';
 import type { CustomeKeyboardEvent, CustomeMouseEvent, TodosType } from '$lib/types';
 import { writable, type Writable } from 'svelte/store';
 
 function TodoStore() {
-	const todos = writable<TodosType[]>([]);
+	const currentTodoFromLocalStorage = (browser && LocalStorage.getTodo('todos')) || [];
+	const todos = writable<TodosType[]>(currentTodoFromLocalStorage);
+	todos.subscribe((todos) => currentTodoFromLocalStorage);
 
 	function createTodoWithKey(this: HTMLInputElement, e: CustomeKeyboardEvent) {
 		if (e.key !== 'Enter') return;
@@ -13,7 +17,13 @@ function TodoStore() {
 			isChecked: false,
 			todo: this.value
 		};
-		todos.update(($todos) => [...$todos, inputTodo]);
+
+		todos.update(($todos) => {
+			LocalStorage.addTodo('todos', [...$todos, inputTodo]);
+
+			return [...$todos, inputTodo];
+		});
+
 		this.value = '';
 	}
 	function createTodoWithButton(this: HTMLButtonElement, e: CustomeMouseEvent) {
@@ -25,11 +35,17 @@ function TodoStore() {
 			isChecked: false,
 			todo: inputValue
 		};
-		todos.update(($todos) => [...$todos, inputTodo]);
+		todos.update(($todos) => {
+			LocalStorage.addTodo('todos', [...$todos, inputTodo]);
+			return [...$todos, inputTodo];
+		});
 		(this.previousElementSibling as HTMLInputElement).value = '';
 	}
 	function deleteTodo({ id: todoId }: TodosType) {
-		todos.update(($todos) => $todos.filter((todo) => todo.id !== todoId));
+		todos.update(($todos) => {
+			LocalStorage.deleteTodo('todos', todoId);
+			return $todos.filter((todo) => todo.id !== todoId);
+		});
 	}
 	function checkTodo(currentTodo: TodosType) {
 		todos.update(($todos) => {
@@ -38,6 +54,7 @@ function TodoStore() {
 
 			const newTodo = { id, todo, isChecked: !isChecked };
 			$todos.splice(currentIndex, 1, newTodo);
+			LocalStorage.checkTodo('todos', currentTodo);
 			return $todos;
 		});
 	}
@@ -50,13 +67,13 @@ function TodoStore() {
 		if (e.key !== 'Enter') return;
 		if (e.currentTarget.value === '') return;
 
-		console.log(e.currentTarget);
 		todos.update(($todos) => {
 			const currentIndex = $todos.findIndex((item) => item.id === currentTodo.id);
 			const { id, isChecked, todo } = currentTodo;
 
 			const newTodo = { id, isChecked, todo: e.currentTarget.value };
 			$todos.splice(currentIndex, 1, newTodo);
+			LocalStorage.editTodo('todos', $todos);
 			return $todos;
 		});
 		isEdit.set(false);
@@ -67,7 +84,6 @@ function TodoStore() {
 		isEdit: Writable<boolean>,
 		currentTodo: TodosType
 	) {
-		console.log(inputRef.value);
 		if (inputRef.value === '') return;
 
 		todos.update(($todos) => {
@@ -76,7 +92,7 @@ function TodoStore() {
 
 			const newTodo = { id, isChecked, todo: inputRef.value };
 			$todos.splice(currentIndex, 1, newTodo);
-			console.log($todos);
+			LocalStorage.editTodo('todos', $todos);
 			return $todos;
 		});
 		isEdit.set(false);
