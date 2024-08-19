@@ -11,6 +11,16 @@ export function closeUpdateOnOutsideClick(isEdit: Writable<boolean>) {
 	});
 }
 
+export function updateArrayObject<T>(
+	arr: T[],
+	identifierId: string | number,
+	updatedData: Partial<T>
+): T[] {
+	return arr.map((item) =>
+		(item as any).id === identifierId ? { ...item, ...updatedData } : item
+	);
+}
+
 function TodoLocalStorage() {
 	function addTodo(keyId: string, value: any) {
 		let data = JSON.stringify(value);

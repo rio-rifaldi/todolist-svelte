@@ -9,8 +9,9 @@
 	export let currentTodo: TodosType;
 
 	let isEdit = writable(false);
-	let input: HTMLInputElement;
-	const { checkTodo, editTodoWithButton, deleteTodo, editTodoWithKey } = todosStore;
+	let inputRef: HTMLInputElement;
+	const { checkTodo, deleteTodo, editTodo } = todosStore;
+
 	closeUpdateOnOutsideClick(isEdit);
 </script>
 
@@ -32,8 +33,8 @@
 				id="text-edit"
 				value={currentTodo.todo}
 				class="focus:outline-none focus:border-b-blue-700 border-b-blue-500 border-b-2 w-full"
-				bind:this={input}
-				on:keypress={(e) => editTodoWithKey(e, currentTodo, isEdit)}
+				bind:this={inputRef}
+				on:keypress={(e) => editTodo({ currentTodo, e, isEdit })}
 			/>
 		{:else}
 			<p class={currentTodo.isChecked ? 'line-through text-slate-300' : ''}>
@@ -46,7 +47,7 @@
 		{#if $isEdit}
 			<button
 				class="hover:bg-slate-200 rounded duration-200 disabled:opacity-20 disabled:pointer-events-none"
-				on:click|stopPropagation={(e) => editTodoWithButton(input, e, isEdit, currentTodo)}
+				on:click|stopPropagation={(e) => editTodo({ currentTodo, isEdit, inputRef, e })}
 			>
 				<IconDeviceFloppy class="hover:stroke-green-500" />
 			</button>
@@ -56,7 +57,7 @@
 				on:click|stopPropagation={async (e) => {
 					isEdit.set(!$isEdit);
 					await tick();
-					input.focus();
+					inputRef.focus();
 				}}
 			>
 				<IconEdit class="stroke-blue-700" />

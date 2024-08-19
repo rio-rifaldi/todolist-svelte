@@ -1,46 +1,54 @@
 import { browser } from '$app/environment';
-import { LocalStorage } from '$lib/functions';
-import type { CustomeKeyboardEvent, CustomeMouseEvent, TodosType } from '$lib/types';
+import { LocalStorage, updateArrayObject } from '$lib/functions';
+import type { CustomeKeyboardEvent, CustomeMouseEvent, EditTodo, TodosType } from '$lib/types';
 import { writable, type Writable } from 'svelte/store';
+
+const isKeyboardEvent = (input: any): input is CustomeKeyboardEvent => {
+	return typeof input.key !== 'undefined';
+};
 
 function TodoStore() {
 	const currentTodoFromLocalStorage = (browser && LocalStorage.getTodo('todos')) || [];
+
 	const todos = writable<TodosType[]>(currentTodoFromLocalStorage);
 	todos.subscribe((todos) => currentTodoFromLocalStorage);
 
-	function createTodoWithKey(this: HTMLInputElement, e: CustomeKeyboardEvent) {
-		if (e.key !== 'Enter') return;
-		if (this.value === '') return;
+	function createTodo(this: HTMLInputElement, e: CustomeKeyboardEvent): void;
+	function createTodo(this: HTMLButtonElement, e: CustomeMouseEvent): void;
+	function createTodo(this: any, e: any): void {
+		if (isKeyboardEvent(e)) {
+			if (e.key !== 'Enter') return;
+			if (this.value === '') return;
+			const inputTodo: TodosType = {
+				id: Math.random(),
+				isChecked: false,
+				todo: this.value
+			};
 
-		const inputTodo: TodosType = {
-			id: Math.random(),
-			isChecked: false,
-			todo: this.value
-		};
+			todos.update(($todos) => {
+				LocalStorage.addTodo('todos', [...$todos, inputTodo]);
 
-		todos.update(($todos) => {
-			LocalStorage.addTodo('todos', [...$todos, inputTodo]);
+				return [...$todos, inputTodo];
+			});
 
-			return [...$todos, inputTodo];
-		});
+			this.value = '';
+		} else {
+			let inputValue = (this.previousElementSibling as HTMLInputElement).value;
+			if (inputValue === '') return;
 
-		this.value = '';
+			const inputTodo: TodosType = {
+				id: Math.random(),
+				isChecked: false,
+				todo: inputValue
+			};
+			todos.update(($todos) => {
+				LocalStorage.addTodo('todos', [...$todos, inputTodo]);
+				return [...$todos, inputTodo];
+			});
+			(this.previousElementSibling as HTMLInputElement).value = '';
+		}
 	}
-	function createTodoWithButton(this: HTMLButtonElement, e: CustomeMouseEvent) {
-		let inputValue = (this.previousElementSibling as HTMLInputElement).value;
-		if (inputValue === '') return;
 
-		const inputTodo: TodosType = {
-			id: Math.random(),
-			isChecked: false,
-			todo: inputValue
-		};
-		todos.update(($todos) => {
-			LocalStorage.addTodo('todos', [...$todos, inputTodo]);
-			return [...$todos, inputTodo];
-		});
-		(this.previousElementSibling as HTMLInputElement).value = '';
-	}
 	function deleteTodo({ id: todoId }: TodosType) {
 		todos.update(($todos) => {
 			LocalStorage.deleteTodo('todos', todoId);
@@ -58,7 +66,31 @@ function TodoStore() {
 			return $todos;
 		});
 	}
+	function editTodo(props: EditTodo & { e: CustomeKeyboardEvent }): void;
+	function editTodo(props: EditTodo & { inputRef: HTMLInputElement; e: CustomeMouseEvent }): void;
+	function editTodo(props: any): void {
+		if (isKeyboardEvent(props.e)) {
+			const inputValue = props.e.currentTarget.value;
+			if (props.e.key !== 'Enter') return;
+			if (inputValue === '') return;
 
+			todos.update(($todos) => {
+				const result = updateArrayObject($todos, props.currentTodo.id, { todo: inputValue });
+				LocalStorage.editTodo('todos', result);
+				return result;
+			});
+			props.isEdit.set(false);
+		} else {
+			const inputValue = props.inputRef.value;
+			if (inputValue === '') return;
+			todos.update(($todos) => {
+				const result = updateArrayObject($todos, props.currentTodo.id, { todo: inputValue });
+				LocalStorage.editTodo('todos', result);
+				return result;
+			});
+			props.isEdit.set(false);
+		}
+	}
 	function editTodoWithKey(
 		e: CustomeKeyboardEvent,
 		currentTodo: TodosType,
@@ -100,12 +132,12 @@ function TodoStore() {
 
 	return {
 		todos,
-		createTodoWithKey,
-		createTodoWithButton,
 		deleteTodo,
 		checkTodo,
 		editTodoWithKey,
-		editTodoWithButton
+		editTodoWithButton,
+		createTodo,
+		editTodo
 	};
 }
 
