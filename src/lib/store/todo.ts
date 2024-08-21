@@ -91,51 +91,11 @@ function TodoStore() {
 			props.isEdit.set(false);
 		}
 	}
-	function editTodoWithKey(
-		e: CustomeKeyboardEvent,
-		currentTodo: TodosType,
-		isEdit: Writable<boolean>
-	) {
-		if (e.key !== 'Enter') return;
-		if (e.currentTarget.value === '') return;
-
-		todos.update(($todos) => {
-			const currentIndex = $todos.findIndex((item) => item.id === currentTodo.id);
-			const { id, isChecked, todo } = currentTodo;
-
-			const newTodo = { id, isChecked, todo: e.currentTarget.value };
-			$todos.splice(currentIndex, 1, newTodo);
-			LocalStorage.editTodo('todos', $todos);
-			return $todos;
-		});
-		isEdit.set(false);
-	}
-	function editTodoWithButton(
-		inputRef: HTMLInputElement,
-		e: CustomeMouseEvent,
-		isEdit: Writable<boolean>,
-		currentTodo: TodosType
-	) {
-		if (inputRef.value === '') return;
-
-		todos.update(($todos) => {
-			const currentIndex = $todos.findIndex((item) => item.id === currentTodo.id);
-			const { id, isChecked, todo } = currentTodo;
-
-			const newTodo = { id, isChecked, todo: inputRef.value };
-			$todos.splice(currentIndex, 1, newTodo);
-			LocalStorage.editTodo('todos', $todos);
-			return $todos;
-		});
-		isEdit.set(false);
-	}
 
 	return {
 		todos,
 		deleteTodo,
 		checkTodo,
-		editTodoWithKey,
-		editTodoWithButton,
 		createTodo,
 		editTodo
 	};
