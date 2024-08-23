@@ -1,17 +1,19 @@
 import { browser } from '$app/environment';
-import { LocalStorage, updateArrayObject } from '$lib/functions';
+
 import type { CustomeKeyboardEvent, CustomeMouseEvent, EditTodo, TodosType } from '$lib/types';
-import { writable, type Writable } from 'svelte/store';
+import { LocalStorage } from '$lib/utils/TodoLocalStorage';
+import { updateArrayObject } from '$lib/utils/updateArrayObject';
+import { writable } from 'svelte/store';
 
 const isKeyboardEvent = (input: any): input is CustomeKeyboardEvent => {
 	return typeof input.key !== 'undefined';
 };
+const currentTodoFromLocalStorage = browser && LocalStorage.getTodo('todos');
+
+type SortOption = 'created' | 'updated';
 
 function TodoStore() {
-	const currentTodoFromLocalStorage = (browser && LocalStorage.getTodo('todos')) || [];
-
 	const todos = writable<TodosType[]>(currentTodoFromLocalStorage);
-	todos.subscribe((todos) => currentTodoFromLocalStorage);
 
 	function createTodo(this: HTMLInputElement, e: CustomeKeyboardEvent): void;
 	function createTodo(this: HTMLButtonElement, e: CustomeMouseEvent): void;
@@ -22,7 +24,9 @@ function TodoStore() {
 			const inputTodo: TodosType = {
 				id: Math.random(),
 				isChecked: false,
-				todo: this.value
+				todo: this.value,
+				createdAt: new Date(Date.now()),
+				updatedAt: new Date(Date.now())
 			};
 
 			todos.update(($todos) => {
@@ -39,7 +43,9 @@ function TodoStore() {
 			const inputTodo: TodosType = {
 				id: Math.random(),
 				isChecked: false,
-				todo: inputValue
+				todo: inputValue,
+				createdAt: new Date(Date.now()),
+				updatedAt: new Date(Date.now())
 			};
 			todos.update(($todos) => {
 				LocalStorage.addTodo('todos', [...$todos, inputTodo]);
@@ -57,13 +63,11 @@ function TodoStore() {
 	}
 	function checkTodo(currentTodo: TodosType) {
 		todos.update(($todos) => {
-			const currentIndex = $todos.findIndex((item) => item.id === currentTodo.id);
-			const { id, isChecked, todo } = currentTodo;
-
-			const newTodo = { id, todo, isChecked: !isChecked };
-			$todos.splice(currentIndex, 1, newTodo);
-			LocalStorage.checkTodo('todos', currentTodo);
-			return $todos;
+			const result = updateArrayObject($todos, currentTodo.id, {
+				isChecked: !currentTodo.isChecked
+			});
+			LocalStorage.addTodo('todos', result);
+			return result;
 		});
 	}
 	function editTodo(props: EditTodo & { e: CustomeKeyboardEvent }): void;
@@ -75,7 +79,10 @@ function TodoStore() {
 			if (inputValue === '') return;
 
 			todos.update(($todos) => {
-				const result = updateArrayObject($todos, props.currentTodo.id, { todo: inputValue });
+				const result = updateArrayObject($todos, props.currentTodo.id, {
+					todo: inputValue,
+					updatedAt: new Date(Date.now())
+				});
 				LocalStorage.editTodo('todos', result);
 				return result;
 			});
@@ -84,11 +91,35 @@ function TodoStore() {
 			const inputValue = props.inputRef.value;
 			if (inputValue === '') return;
 			todos.update(($todos) => {
-				const result = updateArrayObject($todos, props.currentTodo.id, { todo: inputValue });
+				const result = updateArrayObject($todos, props.currentTodo.id, {
+					todo: inputValue,
+					updatedAt: new Date(Date.now())
+				});
 				LocalStorage.editTodo('todos', result);
 				return result;
 			});
 			props.isEdit.set(false);
+		}
+	}
+
+	function deleteAllTodo() {
+		localStorage.removeItem('todos');
+		todos.set([]);
+	}
+
+	function sortBy(options: SortOption) {
+		if (options === 'created') {
+			const todosFromStorage: TodosType[] = LocalStorage.getTodo('todos');
+			const result = todosFromStorage.sort((a, b) => {
+				return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+			});
+			todos.set(result);
+		} else if (options === 'updated') {
+			const todosFromStorage: TodosType[] = LocalStorage.getTodo('todos');
+			const result = todosFromStorage.sort((a, b) => {
+				return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+			});
+			todos.set(result);
 		}
 	}
 
@@ -97,7 +128,9 @@ function TodoStore() {
 		deleteTodo,
 		checkTodo,
 		createTodo,
-		editTodo
+		editTodo,
+		deleteAllTodo,
+		sortBy
 	};
 }
 

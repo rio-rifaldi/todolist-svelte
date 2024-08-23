@@ -6,7 +6,7 @@
 	const { createTodo } = todosStore;
 </script>
 
-<div class=" flex gap-3 my-10">
+<div class=" flex gap-3 my-5">
 	<Input
 		class="py-5 px-3 rounded shadow "
 		type="text"
@@ -15,7 +15,7 @@
 	/>
 	<Button
 		type="submit"
-		class="py-2 px-3 text-white bg-cyan-600 rounded shadow"
+		class="py-2 px-3 text-white bg-blue-600 hover:bg-blue-800 rounded shadow"
 		on:click={createTodo}
 	>
 		add

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { TodosType } from '$lib/types';
 	import type { Writable } from 'svelte/store';
 
 	export let isChecked: boolean;

@@ -5,9 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  '@tabler/icons-svelte':
-    specifier: ^3.12.0
-    version: 3.12.0(svelte@4.2.18)
   bits-ui:
     specifier: ^0.21.13
     version: 0.21.13(svelte@4.2.18)
@@ -668,19 +665,6 @@ packages:
     resolution: {integrity: sha512-KMZNXiGibsW9kvZAO1Pam2JPTDBm+KSHMMHWdsyI/1DbIZjT2A6Gy3hblVXUMEDvUAKq+e0vL0X0o54owWji7g==}
     dependencies:
       tslib: 2.6.3
-    dev: false
-
-  /@tabler/icons-svelte@3.12.0(svelte@4.2.18):
-    resolution: {integrity: sha512-2Xrlwefzf7N5UQLU1Lj8YezCRXAU2nY3h85UVTyewURx9yAu2cBGJtJjcnAnbLgJB1Ny+cxviVWGeLaHsH2hFw==}
-    peerDependencies:
-      svelte: '>=3 <6 || >=5.0.0-next.0'
-    dependencies:
-      '@tabler/icons': 3.12.0
-      svelte: 4.2.18
-    dev: false
-
-  /@tabler/icons@3.12.0:
-    resolution: {integrity: sha512-Im37ar/mQkqLb6XUXsU7nOc4/66VB9/3KLuZ+6tUsJKHHNLaDUkYfCTNG3pnGDI03laByxVf5+umSNK2yPTx8A==}
     dev: false
 
   /@types/cookie@0.6.0:
