@@ -1,11 +1,9 @@
 <script>
-	import { Trash2Icon } from 'lucide-svelte';
+	import { enhance } from '$app/forms';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { DialogTrigger } from '$lib/components/ui/dialog';
+	import { Trash2Icon } from 'lucide-svelte';
 	import { Button, buttonVariants } from './ui/button';
-	import { todosStore } from '$lib/store/todo';
-
-	const { deleteAllTodo } = todosStore;
 </script>
 
 <div>
@@ -28,7 +26,9 @@
 					<Button variant="outline">Back</Button>
 				</Dialog.Close>
 				<Dialog.Close>
-					<Button variant="destructive" on:click={deleteAllTodo}>Delete</Button>
+					<form action="?/deleteAll" use:enhance method="POST">
+						<Button variant="destructive" type="submit">Delete</Button>
+					</form>
 				</Dialog.Close>
 			</div>
 		</Dialog.Content>

@@ -11,13 +11,13 @@ function TodoLocalStorage() {
 		if (!data) return;
 		return JSON.parse(data);
 	}
-	function deleteTodo(keyId: string, todoId: number) {
-		const currentValue: TodosType[] = getTodo(keyId);
-		if (!currentValue) return;
+	// function deleteTodo(keyId: string, todoId: number) {
+	// 	const currentValue: TodosType[] = getTodo(keyId);
+	// 	if (!currentValue) return;
 
-		const result = currentValue.filter((todo) => todo.id !== todoId);
-		addTodo(keyId, result);
-	}
+	// 	const result = currentValue.filter((todo) => todo.id !== todoId);
+	// 	addTodo(keyId, result);
+	// }
 
 	function editTodo(keyId: string, todos: TodosType[]) {
 		addTodo(keyId, todos);
@@ -25,7 +25,6 @@ function TodoLocalStorage() {
 	return {
 		addTodo,
 		getTodo,
-		deleteTodo,
 
 		editTodo
 	};

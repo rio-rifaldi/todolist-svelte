@@ -1,12 +1,29 @@
 <script lang="ts">
 	import * as Select from '$lib/components/ui/select';
-	import { todosStore } from '$lib/store/todo';
+
+	import { page } from '$app/stores';
+	import type { TodoDate, TodosType } from '$lib/types';
 	import { Calendar, ChevronsDownUp } from 'lucide-svelte';
 	import type { Writable } from 'svelte/store';
 	import Button from './ui/button/button.svelte';
-	import type { TodoDate } from '$lib/types';
+
+	type SortOption = 'created' | 'updated';
 
 	export let todoDate: Writable<TodoDate>;
+	const todos = $page.data.todos as TodosType[];
+	console.log(todos);
+
+	function sortBy(options: SortOption) {
+		if (options === 'created') {
+			todos.sort((a, b) => {
+				return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+			});
+		} else if (options === 'updated') {
+			todos.sort((a, b) => {
+				return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+			});
+		}
+	}
 
 	const options = [
 		{ value: 'created', label: 'Created' },
@@ -18,7 +35,6 @@
 		disabled: boolean;
 	};
 
-	const { sortBy } = todosStore;
 	function onselectedchange(data: any) {
 		const selected: Options = data;
 		if (selected.value === 'created') {
@@ -26,7 +42,7 @@
 		} else if (selected.value === 'updated') {
 			todoDate.set({ isShow: true, sort: { created: '', updated: selected.value } });
 		}
-		sortBy(selected.value);
+		// sortBy(selected.value);
 	}
 	function disableSortingDate() {
 		todoDate.set({ isShow: false, sort: { created: '', updated: '' } });

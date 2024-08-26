@@ -2,7 +2,7 @@ import type { Writable } from 'svelte/store';
 
 export type TodosType = {
 	isChecked: boolean;
-	id: number;
+	id: string;
 	todo: string;
 	createdAt: Date;
 	updatedAt: Date;
