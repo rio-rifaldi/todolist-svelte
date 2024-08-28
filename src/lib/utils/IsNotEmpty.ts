@@ -1,3 +1,3 @@
 export function IsNotEmpty(array: unknown[]): boolean {
-	return array.length !== 0;
+	return array?.length !== 0;
 }

@@ -1,8 +1,7 @@
 <script lang="ts">
 	import * as Select from '$lib/components/ui/select';
 
-	import { page } from '$app/stores';
-	import type { TodoDate, TodosType } from '$lib/types';
+	import type { TodoDate } from '$lib/types';
 	import { Calendar, ChevronsDownUp } from 'lucide-svelte';
 	import type { Writable } from 'svelte/store';
 	import Button from './ui/button/button.svelte';
@@ -10,20 +9,19 @@
 	type SortOption = 'created' | 'updated';
 
 	export let todoDate: Writable<TodoDate>;
-	const todos = $page.data.todos as TodosType[];
-	console.log(todos);
+	// const todos = $page.data.todos as TodosType[];
 
-	function sortBy(options: SortOption) {
-		if (options === 'created') {
-			todos.sort((a, b) => {
-				return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-			});
-		} else if (options === 'updated') {
-			todos.sort((a, b) => {
-				return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-			});
-		}
-	}
+	// function sortBy(options: SortOption) {
+	// 	if (options === 'created') {
+	// 		todos.sort((a, b) => {
+	// 			return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+	// 		});
+	// 	} else if (options === 'updated') {
+	// 		todos.sort((a, b) => {
+	// 			return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+	// 		});
+	// 	}
+	// }
 
 	const options = [
 		{ value: 'created', label: 'Created' },

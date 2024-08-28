@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import empty from '$lib/assets/empty.svg';
 	import Filter from '$lib/components/Filter.svelte';
 	import InputTodo from '$lib/components/InputTodo.svelte';
+	import PopoverProfile from '$lib/components/PopoverProfile.svelte';
 	import TodoListItem from '$lib/components/TodoListItem.svelte';
 	import type { TodoDate, TodosType } from '$lib/types';
 	import { getRelativeTime } from '$lib/utils/GetRelativeTime';
@@ -12,7 +14,7 @@
 	export let data: PageServerData;
 	export let form: ActionData;
 
-	$: todos = data.todos as unknown as TodosType[];
+	$: todos = (data.todos as unknown as TodosType[]) ?? [];
 	const todoDate = writable<TodoDate>({
 		isShow: false,
 		sort: {
@@ -20,9 +22,13 @@
 			updated: ''
 		}
 	});
+
+	const user = $page.data?.user?.username as string | undefined;
 </script>
 
-<div class="w-full max-w-lg place-self-center px-3" id="todolist">
+<PopoverProfile />
+
+<div class="w-full max-w-lg place-self-center mt-7" id="todolist">
 	{#if form?.error}
 		<p>{form.error}</p>
 	{/if}

@@ -1,9 +1,20 @@
-<script>
+<script lang="ts">
 	import { enhance } from '$app/forms';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { DialogTrigger } from '$lib/components/ui/dialog';
 	import { Trash2Icon } from 'lucide-svelte';
 	import { Button, buttonVariants } from './ui/button';
+	import type { SubmitFunction } from '@sveltejs/kit';
+	import toast from 'svelte-french-toast';
+
+	const submitDeleteAll: SubmitFunction = () => {
+		return ({ update, result }) => {
+			if (result.type === 'success') {
+				toast.success('todo deleted');
+			}
+			update({ invalidateAll: true, reset: true });
+		};
+	};
 </script>
 
 <div>
@@ -26,7 +37,7 @@
 					<Button variant="outline">Back</Button>
 				</Dialog.Close>
 				<Dialog.Close>
-					<form action="?/deleteAll" use:enhance method="POST">
+					<form action="?/deleteAll" use:enhance={submitDeleteAll} method="POST">
 						<Button variant="destructive" type="submit">Delete</Button>
 					</form>
 				</Dialog.Close>

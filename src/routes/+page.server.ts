@@ -1,44 +1,21 @@
-// import { TURSO_AUTH_TOKEN, TURSO_DATABASE_URL } from '$env/static/private';
-// import { createClient } from '@libsql/client';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
 import { turso } from './api/turso.server.js';
 import { randomId } from '$lib/utils/RandomId.js';
+import { lucia } from '$lib/server/auth.js';
 
-let todos = [
-	{
-		createdAt: new Date(Date.now()),
-		id: '3944969628572214',
-		isChecked: 0,
-		todo: 'jhjh',
-		updatedAt: new Date(Date.now())
-	},
-	{
-		createdAt: new Date(Date.now()),
-		id: '3944769728572214',
-		isChecked: 0,
-		todo: 'jhj1',
-		updatedAt: new Date(Date.now())
-	},
-	{
-		createdAt: new Date(Date.now()),
-		id: '3944969798572214',
-		isChecked: 0,
-		todo: 'jhj2',
-		updatedAt: new Date(Date.now())
-	},
-	{
-		createdAt: new Date(Date.now()),
-		id: '3944269728572214',
-		isChecked: 0,
-		todo: 'jhj3',
-		updatedAt: new Date(Date.now())
+export const load: PageServerLoad = async ({ locals }) => {
+	const userId = locals.session?.userId;
+	if (!userId) {
+		return {
+			todos: []
+		};
 	}
-];
-
-export const load: PageServerLoad = async () => {
 	try {
-		const res = await turso.execute('SELECT * FROM todo_list');
+		const res = await turso.execute({
+			sql: 'SELECT * FROM todo_list WHERE owner = ?',
+			args: [userId]
+		});
 		if (res.rows) {
 			return {
 				todos: res.rows
@@ -47,7 +24,7 @@ export const load: PageServerLoad = async () => {
 	} catch (error) {
 		console.log(error);
 	}
-	console.count('running ');
+
 	return;
 };
 
@@ -56,6 +33,12 @@ export const actions = {
 		const data = await request.formData();
 		const input = String(data.get('todo'));
 		const dateNow = new Date(Date.now());
+		const userId = locals.session?.userId;
+		if (!userId) {
+			return fail(422, {
+				error: 'un authorized'
+			});
+		}
 
 		if (input === '') {
 			return fail(422, {
@@ -65,19 +48,12 @@ export const actions = {
 		}
 		try {
 			await turso.execute(
-				'CREATE TABLE IF NOT EXISTS todo_list(id VARCHAR(100), todo VARCHAR(255), isChecked BOOLEAN, createdAt DATE, updatedAt DATE )'
+				'CREATE TABLE IF NOT EXISTS todo_list(id VARCHAR(100) NOT NULL, todo VARCHAR(255) NOT NULL, isChecked BOOLEAN NOT NULL, createdAt DATE NOT NULL, updatedAt DATE NOT NULL, owner TEXT NOT NULL, FOREIGN KEY (owner) REFERENCES user (id) )'
 			);
 			await turso.execute({
-				sql: 'INSERT INTO todo_list VALUES(?,?,?,?,?)',
-				args: [randomId(), input, false, dateNow, dateNow]
+				sql: 'INSERT INTO todo_list VALUES(?,?,?,?,?,?)',
+				args: [randomId(), input, false, dateNow, dateNow, userId]
 			});
-			// todos.push({
-			// 	createdAt: dateNow,
-			// 	updatedAt: dateNow,
-			// 	todo: input,
-			// 	isChecked: 0,
-			// 	id: Math.random().toString().substring(2)
-			// });
 		} catch (error: any) {
 			return fail(422, {
 				description: data.get('todo'),
@@ -139,5 +115,17 @@ export const actions = {
 				error: error.message
 			});
 		}
+	},
+	logout: async (event) => {
+		if (!event.locals.session) {
+			return fail(401);
+		}
+		await lucia.invalidateSession(event.locals.session.id);
+		const sessionCookie = lucia.createBlankSessionCookie();
+		event.cookies.set(sessionCookie.name, sessionCookie.value, {
+			path: '.',
+			...sessionCookie.attributes
+		});
+		redirect(302, '/');
 	}
 };
